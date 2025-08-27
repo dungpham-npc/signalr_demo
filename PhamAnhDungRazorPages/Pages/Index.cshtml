@@ -1,0 +1,71 @@
+﻿@page
+@model PhamAnhDungRazorPages.Pages.IndexModel;
+@{
+    ViewData["Title"] = "Login";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <style>
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .login-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 5rem 10rem;
+            border: 1px solid #ccc;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .login-btn {
+            align-self: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <div class="login-box">
+        <h2>Login</h2>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div style="padding-top: 30px; text-align: center; color: red;">
+                @Model.ErrorMessage
+            </div>
+        }
+
+        <form method="post">
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="Email" asp-for="Email" required />
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="Password" asp-for="Password" required />
+            </div>
+
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

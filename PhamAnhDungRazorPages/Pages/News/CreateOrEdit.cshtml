@@ -1,0 +1,85 @@
+﻿@page "{id?}"
+@model PhamAnhDungRazorPages.Pages.News.CreateOrEditModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery AntiForgery
+@{
+    var isEdit = Model.NewsArticle.NewsArticleId > 0;
+    Layout = null;
+}
+
+<h3>@(isEdit ? "Edit" : "Create") News Article</h3>
+<input type="hidden" id="RequestVerificationToken" name="__RequestVerificationToken" value="@AntiForgery.GetTokens(HttpContext).RequestToken" />
+
+<form id="createOrEditForm">
+    <input type="hidden" asp-for="NewsArticle.NewsArticleId" />
+    <input type="hidden" name="__RequestVerificationToken" value="@AntiForgery.GetTokens(HttpContext).RequestToken" />
+
+
+    <div class="form-group">
+        <label>Title</label>
+        <input asp-for="NewsArticle.NewsTitle" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label>Headline</label>
+        <input asp-for="NewsArticle.Headline" class="form-control" required />
+    </div>
+
+    <div class="form-group">
+        <label>Category</label>
+        <select asp-for="NewsArticle.CategoryId" class="form-control">
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.CategoryId">@category.CategoryName</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Content</label>
+        <textarea asp-for="NewsArticle.NewsContent" class="form-control"></textarea>
+    </div>
+
+    <div class="form-group">
+        <label>News Source</label>
+        <input asp-for="NewsArticle.NewsSource" class="form-control" />
+    </div>
+
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" onclick="closeModal('createOrEditModal')" class="btn btn-secondary">Cancel</button>
+    </div>
+</form>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $('#createOrEditForm').submit(function(event) {
+        event.preventDefault();
+        let formData = $(this).serialize();
+
+        $.ajax({
+            url: '/News/CreateOrEdit?handler=CreateOrUpdate',
+            type: 'POST',
+            data: formData,
+            dataType: "json",
+            success: function(response) {
+                console.log("Success Response:", response);
+                if (response.success) {
+                    closeModal('createOrEditModal');
+                    connection.invoke("SendUpdate", "News Created/Updated");
+                } else {
+                    console.error("Server responded with error:", response.message);
+                    alert(response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("AJAX Error:", error, "Status:", status, "Response:", xhr.responseText);
+                if (xhr.responseText.includes("<body>")) {
+                    alert("Unexpected HTML response. Check server logs.");
+                } else {
+                    alert("An error occurred: " + xhr.responseText);
+                }
+            }
+        });
+    });
+
+</script>

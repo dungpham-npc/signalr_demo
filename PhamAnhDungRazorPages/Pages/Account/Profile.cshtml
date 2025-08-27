@@ -1,0 +1,103 @@
+﻿@page
+@model PhamAnhDungRazorPages.Pages.Account.ProfileModel;
+@{
+    ViewData["Title"] = "Manage Profile";
+}
+
+<h2>Manage Profile</h2>
+
+<form id="profileForm" method="post">
+    <input type="hidden" asp-for="Account.AccountId" />
+    <input type="hidden" asp-for="Account.AccountRole" />
+
+    <div class="form-group">
+        <label asp-for="Account.AccountName">Name</label>
+        <input asp-for="Account.AccountName" class="form-control" required />
+        <span asp-validation-for="Account.AccountName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Account.AccountEmail">Email</label>
+        <input asp-for="Account.AccountEmail" type="email" class="form-control" required />
+        <span asp-validation-for="Account.AccountEmail" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Account.AccountPassword">New Password</label>
+        <input asp-for="Account.AccountPassword" type="password" class="form-control" value="@Model.Account.AccountPassword" />
+        <span asp-validation-for="Account.AccountPassword" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mt-3">
+        <button type="submit" class="btn btn-primary">Update Profile</button>
+    </div>
+</form>
+
+<style>
+    .profile-form {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .btn-primary {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background: #2980b9;
+    }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $('#profileForm').submit(function(event) {
+        event.preventDefault();
+        let formData = $(this).serialize();
+        console.log('Form data:', formData);
+
+        $.ajax({
+            url: '/Account/Profile?handler=Update',
+            type: 'POST',
+            data: formData,
+            dataType: 'json',
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("XSRF-TOKEN",
+                    $('input:hidden[name="__RequestVerificationToken"]').val());
+            },
+            success: function(response) {
+                if (response.success) {
+                    alert('Profile updated successfully!');
+                    location.reload();
+                } else if (response.redirectUrl) {
+                    window.location.href = response.redirectUrl;
+                } else {
+                    alert(response.message + ": " + response.errors || 'An error occurred while updating the profile.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.log('Error:', xhr.responseText);
+                alert('An error occurred: ' + error);
+            }
+        });
+    });
+</script>

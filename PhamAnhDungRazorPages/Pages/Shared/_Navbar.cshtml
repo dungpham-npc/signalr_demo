@@ -1,0 +1,243 @@
+﻿@{
+    var userRole = Context.Session.GetString("UserRole") ?? "Guest";
+    var userName = Context.Session.GetString("UserName") ?? "Guest";
+}
+
+<nav class="navbar">
+    <div class="nav-container">
+        <a class="nav-brand" asp-page="/News/Index">
+            <i class="fas fa-newspaper"></i>
+            News Management
+        </a>
+
+        <div class="nav-content">
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a asp-page="/News/Index">
+                        <i class="fas fa-list"></i> Articles
+                    </a>
+                </li>
+
+                @if (userRole == "3") // Admin
+                {
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle">
+                            <i class="fas fa-user-shield"></i> Admin
+                            <i class="fas fa-chevron-down"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a asp-page="/Account/Index">Account Management</a></li>
+                            <li><a asp-page="/News/Statistics">Statistics</a></li>
+                        </ul>
+                    </li>
+                }
+
+                @if (userRole == "1") // Staff
+                {
+                    <li class="nav-item dropdown">
+                        <a class="dropdown-toggle">
+                            <i class="fas fa-tasks"></i> Management
+                            <i class="fas fa-chevron-down"></i>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a asp-page="/Category/Category">Manage Categories</a></li>
+                            <li><a asp-page="/News/History">News Created History</a></li>
+                        </ul>
+                    </li>
+                }
+            </ul>
+
+            <div class="nav-auth">
+                @if (userRole == "Guest")
+                {
+                    <a class="login-btn" asp-page="/Index">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                }
+                else
+                {
+                    <span class="user-badge">Welcome, @userName</span>
+                    <a class="logout-btn" asp-page="/Account/Logout">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                    if (userRole == "1")
+                    {
+                        <a class="profile-btn" asp-page="/Account/Profile">
+                            <i class="fas fa-user"></i> Profile
+                        </a>
+                    }
+                }
+            </div>
+        </div>
+
+        <button class="nav-toggle" id="navToggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </div>
+</nav>
+
+<style>
+.navbar {
+    background: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1000;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    align-items: center;
+    height: 64px;
+}
+
+.nav-brand {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    margin-left: 2rem;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-item {
+    position: relative;
+}
+
+.nav-item a {
+    color: #2c3e50;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.nav-item a:hover {
+    color: #3498db;
+}
+
+.dropdown-toggle {
+    cursor: pointer;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    min-width: 200px;
+    display: none;
+    padding: 0.5rem 0;
+    list-style: none;
+}
+
+.nav-item:hover .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu a {
+    padding: 0.5rem 1rem;
+    font-weight: normal;
+}
+
+.nav-auth {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-badge {
+    background: #e9ecef;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.login-btn, .logout-btn, .profile-btn {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.profile-btn {
+    background: #f39c12;
+    color: white;
+}
+
+.login-btn {
+    background: #3498db;
+    color: white;
+}
+
+.logout-btn {
+    background: #e74c3c;
+    color: white;
+}
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+.nav-toggle span {
+    display: block;
+    width: 25px;
+    height: 2px;
+    background: #2c3e50;
+    transition: 0.3s;
+}
+
+</style>
+
+<script>
+    document.getElementById('navToggle').addEventListener('click', function() {
+        document.querySelector('.nav-content').classList.toggle('active');
+    });
+
+    document.addEventListener('click', function(event) {
+        const navContent = document.querySelector('.nav-content');
+        const navToggle = document.getElementById('navToggle');
+
+        if (!navContent.contains(event.target) && !navToggle.contains(event.target)) {
+            navContent.classList.remove('active');
+        }
+    });
+</script>

@@ -1,0 +1,413 @@
+﻿@page
+@using Microsoft.AspNetCore.Http
+@model PhamAnhDungRazorPages.Pages.News.NewsModel
+@{
+    var userRole = HttpContext.Session.GetString("UserRole") ?? "Guest";
+}
+
+<div class="news-container">
+    <header class="news-header">
+        <h2>News Articles</h2>
+        <div class="news-actions">
+            <div class="search-filters">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search articles...">
+                    <i class="search-icon">🔍</i>
+                </div>
+                @if (Model.Categories != null && Model.Categories.Any())
+                {
+                    <select id="categoryFilter">
+                        <option value="">All Categories</option>
+                        @foreach (var category in Model.Categories)
+                        {
+                            <option value="@category.CategoryId">@category.CategoryName</option>
+                        }
+                    </select>
+                }
+                else
+                {
+                    <p>No categories available.</p>
+                }
+
+            </div>
+            @if (userRole == "1")
+            {
+                <button class="btn-create" onclick="openCreateModal()">
+                    <span>+</span> New Article
+                </button>
+            }
+        </div>
+    </header>
+
+    <div id="articleList" class="article-grid">
+        @foreach (var article in Model.NewsArticles)
+        {
+            <div class="article-card" data-category-id="@article.CategoryId">
+                <h3 class="article-title">@article.NewsTitle</h3>
+                <p class="author">Author: @article.AuthorName</p>
+                <p class="created_date">Date: @article.CreatedDate.ToString("MMM dd, yyyy")</p>
+                <span class="article-category">@article.Category.CategoryName</span>
+
+                <div class="article-actions">
+                    <button class="btn-view" onclick="openDetailsModal(@article.NewsArticleId)">View</button>
+                    @if (userRole == "1") // Staff Role
+                    {
+                        <button class="btn-edit" onclick="openEditModal(@article.NewsArticleId)">Edit</button>
+                        <button class="btn-delete" onclick="openDeleteModal(@article.NewsArticleId)">Delete</button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modals -->
+<div id="createOrEditModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('createOrEditModal')">&times;</span>
+        <div class="modal-body"></div>
+    </div>
+</div>
+
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('deleteModal')">&times;</span>
+        <div class="modal-body"></div>
+    </div>
+</div>
+
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('detailsModal')">&times;</span>
+        <div class="modal-body"></div>
+    </div>
+</div>
+
+<style>
+    /* Main Container */
+    .news-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Header Section */
+    .news-header {
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .news-header h2 {
+        font-size: 2rem;
+        color: #333;
+        margin: 0;
+    }
+
+    .news-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .created_date {
+        margin-bottom: 1.5rem;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .author {
+        margin-bottom: 1.5rem;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    /* Search Box */
+    .search-box {
+        position: relative;
+        width: 300px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.3s;
+    }
+
+    .search-box input:focus {
+        outline: none;
+        border-color: #007bff;
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+    }
+
+    /* Buttons */
+    .btn-create {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        transition: background-color 0.3s;
+    }
+
+    .btn-create:hover {
+        background-color: #0056b3;
+    }
+
+    /* Article Grid */
+    .article-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+    }
+
+    /* Article Cards */
+    .article-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .article-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .article-title {
+        font-size: 1.2rem;
+        color: #333;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .article-category {
+        display: inline-block;
+        background: #f0f0f0;
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 1rem;
+    }
+
+    .article-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .btn-edit, .btn-delete {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.3s;
+    }
+
+    .btn-edit {
+        background-color: #f8f9fa;
+        color: #333;
+    }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .btn-edit:hover {
+        background-color: #e2e6ea;
+    }
+
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+
+    .btn-view {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        background-color: #28a745;
+        color: white;
+        transition: background-color 0.3s;
+    }
+
+    .btn-view:hover {
+        background-color: #218838;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: white;
+        margin: 10% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 50%;
+        position: relative;
+    }
+
+    .close-modal {
+        position: absolute;
+        right: 1rem;
+        top: 1rem;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .search-filters {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .category-filter {
+        padding: 0.8rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        min-width: 150px;
+        background-color: white;
+    }
+
+    .category-filter:focus {
+        outline: none;
+        border-color: #007bff;
+    }
+
+    .article-card[data-hidden="true"] {
+        display: none;
+    }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.10/signalr.min.js"></script>
+<script>
+    function closeModal(modalId) {
+        $('#' + modalId).hide();
+    }
+
+    function openDetailsModal(id) {
+        $.get(`/News/Details?id=${id}`, function(data) {
+            $('#detailsModal .modal-body').html(data);
+            $('#detailsModal').fadeIn();
+        }).fail(function() {
+            alert("Failed to load article details.");
+        });
+    }
+
+    function openCreateModal() {
+        $.get(`/News/CreateOrEdit`, function(data) {
+            $('#createOrEditModal .modal-body').html(data);
+            $('#createOrEditModal').fadeIn();
+        }).fail(function() {
+            alert("Failed to load the create form.");
+        });
+    }
+
+    function openEditModal(id) {
+        $.get(`/News/CreateOrEdit?id=${id}`, function(data) {
+            $('#createOrEditModal .modal-body').html(data);
+            $('#createOrEditModal').fadeIn();
+        }).fail(function() {
+            alert("Failed to load the edit form.");
+        });
+    }
+
+    function openDeleteModal(id) {
+        $.get(`/News/Delete?id=${id}`, function(data) {
+            $('#deleteModal .modal-body').html(data);
+            $('#deleteModal').fadeIn();
+        }).fail(function() {
+            alert("Failed to load delete confirmation.");
+        });
+    }
+
+    var connection = new signalR.HubConnectionBuilder()
+        .withUrl("/newshub")
+        .configureLogging(signalR.LogLevel.Information)
+        .build();
+
+    connection.start().then(function() {
+        console.log("SignalR Connected");
+    }).catch(function(err) {
+        console.error("SignalR Connection Failed:", err);
+    });
+
+    connection.on("NewsUpdated", function (action, data) {
+        console.log("SignalR Update Received:", action, data);
+
+        if (action === "created") {
+            location.reload();
+        }
+        if (action === "updated") {
+            console.log("updated");
+        }
+        if (action === "deleted") {
+            location.reload();
+        }
+        if (action === "tagAdded" || action === "tagRemoved") {
+            location.reload();
+        }
+    });
+
+    $(document).ready(function() {
+        const searchInput = $('#searchInput');
+        const categoryFilter = $('#categoryFilter');
+        const articles = $('.article-card');
+
+        function filterArticles() {
+            const searchTerm = searchInput.val().toLowerCase();
+            const selectedCategory = categoryFilter.val();
+
+            articles.each(function() {
+                const article = $(this);
+                const title = article.find('.article-title').text().toLowerCase();
+                const category = article.find('.article-category').text().toLowerCase();
+                const categoryId = article.attr('data-category-id');
+
+                const matchesSearch = title.includes(searchTerm);
+                const matchesCategory = !selectedCategory || categoryId === selectedCategory;
+
+                article.attr('data-hidden', !(matchesSearch && matchesCategory));
+            });
+        }
+
+        searchInput.on('input', filterArticles);
+        categoryFilter.on('change', filterArticles);
+    });
+
+
+</script>

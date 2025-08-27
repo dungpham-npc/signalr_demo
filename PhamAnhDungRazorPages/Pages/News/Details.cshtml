@@ -1,0 +1,272 @@
+﻿@page
+@model PhamAnhDungRazorPages.Pages.News.DetailsModel
+@{
+    Layout = null;
+}
+
+@{
+    var userRole = HttpContext.Session.GetString("UserRole") ?? "Guest";
+}
+
+<div class="article-details">
+    <h2 class="details-title">@Model.NewsArticle.NewsTitle</h2>
+
+    <div class="details-meta">
+        <span class="category-badge">@Model.NewsArticle.Category.CategoryName</span>
+        <span class="date" style="display: inline; margin-right: 50px">Created on @Model.NewsArticle.CreatedDate.ToString("MMM dd, yyyy") by @Model.NewsArticle.AuthorName</span>
+        @if (Model.NewsArticle.ModifiedDate != null)
+        {
+            <span>Last modified on @Model.NewsArticle.ModifiedDate?.ToString("MMM dd, yyyy") by @Model.NewsArticle.ModifiedByName</span>
+        }
+    </div>
+
+    <div class="details-headline">
+        <h3>@Model.NewsArticle.Headline</h3>
+    </div>
+
+    <div class="details-content">
+        @Model.NewsArticle.NewsContent
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.NewsArticle.NewsSource))
+    {
+        <div class="details-source">
+            Source: @Model.NewsArticle.NewsSource
+        </div>
+    }
+
+    @if (Model.NewsArticle.Tags.Any())
+    {
+        <div class="details-tags">
+            <span class="tags-label">Tags:</span>
+            @foreach (var tag in Model.NewsArticle.Tags)
+            {
+                <span class="tag">
+                    @tag.TagName
+                    @if (userRole == "1")
+                    {
+                        <button type="button" class="remove-tag" onclick="removeTag(@Model.NewsArticle.NewsArticleId, @tag.TagId)">x</button>
+                    }
+                </span>
+            }
+            @if (userRole == "1")
+            {
+                <button type="button" class="btn-add-tag" onclick="openAddTagModal(@Model.NewsArticle.NewsArticleId)">Add Tag</button>
+            }
+        </div>
+    }
+    else
+    {
+        @if (userRole == "1")
+        {
+            <button type="button" class="btn-add-tag" onclick="openAddTagModal(@Model.NewsArticle.NewsArticleId)">Add Tag</button>
+        }
+    }
+</div>
+
+<div id="addTagModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal('addTagModal')">&times;</span>
+        <div class="modal-body">
+            <h3>Add Tag</h3>
+            <form id="addTagForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="newsArticleId"/>
+                <div class="form-group">
+                    <input type="checkbox" id="useExistingTag"/>
+                    <label for="useExistingTag">Use existing tag</label>
+                </div>
+                <div class="form-group" id="existingTagsGroup">
+                    <label for="existingTags">Existing Tags</label>
+                    <select id="existingTags" class="form-control">
+                        @foreach (var tag in Model.Tags)
+                        {
+                            <option value="@tag.TagId">@tag.TagName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group" id="newTagGroup">
+                    <label for="newTagName">New Tag Name</label>
+                    <input type="text" id="newTagName" class="form-control"/>
+                    <label for="newTagNote">New Tag Note</label>
+                    <input type="text" id="newTagNote" class="form-control"/>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Tag</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    .article-details {
+        padding: 1rem;
+    }
+
+    .details-title {
+        font-size: 1.8rem;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .details-meta {
+        margin-bottom: 1.5rem;
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .category-badge {
+        background: #007bff;
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 4px;
+        margin-right: 1rem;
+    }
+
+    .details-headline {
+        font-size: 1.2rem;
+        color: #555;
+        margin-bottom: 1.5rem;
+        font-style: italic;
+    }
+
+    .details-content {
+        max-height: 200px;
+        overflow-y: auto;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        white-space: pre-line;
+    }
+
+    .details-source {
+        color: #666;
+        font-style: italic;
+        margin-bottom: 1rem;
+    }
+
+    .details-tags {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+    }
+
+    .tags-label {
+        color: #666;
+        margin-right: 0.5rem;
+    }
+
+    .tag {
+        background: #f0f0f0;
+        padding: 0.2rem 0.6rem;
+        border-radius: 3px;
+        margin-right: 0.5rem;
+        font-size: 0.9rem;
+        position: relative;
+    }
+
+    .remove-tag {
+        background: none;
+        border: none;
+        color: red;
+        font-size: 1rem;
+        cursor: pointer;
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 0;
+    }
+
+    .btn-add-tag {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 1rem;
+    }
+
+    .btn-add-tag:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        $('#useExistingTag').change(function() {
+            if ($(this).is(':checked')) {
+                $('#existingTagsGroup').show();
+                $('#newTagGroup').hide();
+            } else {
+                $('#existingTagsGroup').hide();
+                $('#newTagGroup').show();
+            }
+        });
+
+        $('#useExistingTag').trigger('change'); // Set initial state
+
+        $('#addTagForm').submit(function(event) {
+            event.preventDefault();
+            const newsArticleId = $('#newsArticleId').val();
+            const useExistingTag = $('#useExistingTag').is(':checked');
+            const existingTagId = $('#existingTags').val();
+            const newTagName = $('#newTagName').val();
+            const newTagNote = $('#newTagNote').val();
+
+            let formData = {
+                newsArticleId: newsArticleId,
+                __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+            };
+
+            if (useExistingTag && existingTagId) {
+                formData.tagId = existingTagId;
+            } else if (!useExistingTag && newTagName) {
+                formData.tagName = newTagName;
+                formData.note = newTagNote;
+            } else {
+                alert("Please provide a tag.");
+                return;
+            }
+
+            $.post('/News/Tag?handler=AddTag', formData, function(response) {
+                if (response.success) {
+                    closeModal('addTagModal');
+                    connection.invoke("SendUpdate", "tagAdded", newsArticleId);
+                    alert("Tag added successfully!");
+                    location.reload();
+                } else {
+                    alert(response.message);
+                }
+            }).fail(function() {
+                alert("Error adding tag.");
+            });
+        });
+    });
+
+    function removeTag(newsArticleId, tagId) {
+        if (!confirm("Are you sure you want to remove this tag?")) return;
+
+        $.post('/News/Tag?handler=RemoveTag', { newsArticleId: newsArticleId, tagId: tagId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+        }, function(response) {
+            if (response.success) {
+                connection.invoke("SendUpdate", "tagRemoved", newsArticleId);
+                $("#tag-" + tagId).remove();
+                alert("Tag removed successfully!");
+            } else {
+                alert(response.message);
+            }
+        }).fail(function() {
+            alert("Error removing tag.");
+        });
+    }
+
+    function openAddTagModal(newsArticleId) {
+        $('#newsArticleId').val(newsArticleId);
+        $('#addTagModal').fadeIn();
+    }
+
+    function closeModal(modalId) {
+        $('#' + modalId).fadeOut();
+    }
+</script>
+
